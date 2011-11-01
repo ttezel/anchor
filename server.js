@@ -66,10 +66,10 @@ Rsync.prototype.getWeakChkSum = function() {
       for(var i = 0; i < numBlocks; i++) {
         self.weakChkSums[i] = a[i] + b[i]*Math.pow(2,16);   
       }
-      
-      sys.puts('weakChkSums', self.weakChkSums);
     }
   ]);
+
+  return this;
 };
 
 var rsync = new Rsync().send('file.html');
