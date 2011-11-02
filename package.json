@@ -5,7 +5,9 @@
   , "keywords": []
   , "author": "Tolga Tezel <tolgatezel11@gmail.com>"
   , "contributors": ["Mihai Tomescu <matomesc@gmail.com>"]
-  , "dependencies": {}
+  , "dependencies": {
+        "restify": ">=0.5.4"  
+    }
   , "main": "index"
   , "engines": { "node": "0.5.x" }
 }
