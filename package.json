@@ -1,0 +1,10 @@
+{
+    "name": "node-rsync"
+  , "version": "0.0.1"
+  , "description": "rsync implemented in node over http"
+  , "keywords": []
+  , "author": "Mihai Tomescu <matomesc@gmail.com>"
+  , "dependencies": {}
+  , "main": "index"
+  , "engines": { "node": "0.4.x" }
+}
