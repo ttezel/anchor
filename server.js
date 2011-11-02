@@ -1,11 +1,10 @@
-var async = require('async')
-  , fs = require('fs')
+var fs = require('fs')
   , util = require('util')
   , sys = require('sys');
 
 var Rsync = function() {
   this.streamOpts = {
-    bufferSize: 500   //S
+    bufferSize: 500
   };
   this.blocks = []; //blocks of size bufferSize
   this.weakChkSums = [];
@@ -31,43 +30,32 @@ Rsync.prototype.send = function(filename) {
 };
 
 //calculate weak checksum for each block
-Rsync.prototype.getWeakChkSum = function() {
+Rsync.prototype.getWeakChkSum = function(rolling) {
   var self = this, a = [], b = [];
 
-  async.series([
-      function(cb) {
-        self.blocks.forEach(function(buff, blockNum) {
-          var len = buff.length, lastOffset = len - 1;
-          
-          //calculate block 'a' value
-          a[blockNum] = 0;
-          for(var i = 0; i < len; i++) {  //iterate byte-by-byte
-            a[blockNum] += buff[i];     
-          }
-          
-          //calculate block 'b' value
-          b[blockNum] = 0;
-          for(var i = 0; i < len; i++) {
-            b[blockNum] += (lastOffset - i + 1)*buff[i];      
-          }
-        });
-        
-        cb(null);
-      }
-    , function (cb) {
-        a = a.map(function(sum) { return sum%self.streamOpts.bufferSize });
-        b = b.map(function(sum) { return sum%self.streamOpts.bufferSize });
-        
-        cb(null);
-      }
-    , function() {
-      var numBlocks = self.blocks.length;
-  
-      for(var i = 0; i < numBlocks; i++) {
-        self.weakChkSums[i] = a[i] + b[i]*Math.pow(2,16);   
-      }
+  this.blocks.forEach(function(buff, blockNum) {
+    var len = buff.length, lastOffset = len - 1;
+    
+    //calculate block 'a' value
+    a[blockNum] = 0;
+    for(var i = 0; i < len; i++) {  //iterate byte-by-byte
+      a[blockNum] += buff[i]%self.streamOpts.bufferSize;     
     }
-  ]);
+    
+    //calculate block 'b' value
+    b[blockNum] = 0;
+    for(var i = 0; i < len; i++) {
+      b[blockNum] += (lastOffset - i + 1)*buff[i]%self.streamOpts.bufferSize;      
+    }
+  });
+
+  var numBlocks = self.blocks.length;
+
+  for(var i = 0; i < numBlocks; i++) {
+    self.weakChkSums[i] = a[i] + b[i]*Math.pow(2,16);   
+  }
+
+  sys.puts('weakChkSums', self.weakChkSums);
 
   return this;
 };
