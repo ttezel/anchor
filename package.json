@@ -7,10 +7,8 @@
   , "contributors": ["Mihai Tomescu <matomesc@gmail.com>"]
   , "dependencies": {
         "formidable": ">=1.0.6"
+      , "restify": ">=0.5.4"
       , "node-static": ">=0.5.9"
-      , "hiredis": ">=0.1.12"
-      , "redis": ">=0.6.7"
-      , "journey": ">=0.4.0-pre-s"
     }
   , "main": "index"
   , "engines": { "node": "0.5.x" }
