@@ -39,9 +39,12 @@ var fileOverwrite = function(path, contents, callback) {
 //  Helper for basic Rsync testing
 //  Overwrite @clientPath with @clientContents
 //  Overwrite @serverPath with@serverContents
-//  When all this is done, call @callback
+//  When all this is done:
+//  - checksum the server file
+//  - search the client file for new blocks
+//  - call @callback
 //
-var RsyncWrite = function(clientPath, clientContents, serverPath, serverContents, callback) {
+var serverUpdate = function(clientPath, clientContents, serverPath, serverContents, callback) {
   fileOverwrite(clientPath, clientContents, function(err, written) {
     if(err) callback(err);
     
@@ -70,7 +73,7 @@ vows.describe('Rsync - updating server file').addBatch({
         var clientContents = 'aabbqqcc'
           , serverContents = 'aabbcc'
         
-        RsyncWrite(
+        serverUpdate(
             clientFilePath
           , clientContents
           , serverFilePath
