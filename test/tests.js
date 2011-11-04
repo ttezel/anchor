@@ -7,37 +7,63 @@ var clientFilePath = './lib/files/hello-client.txt'
   , serverFilePath = './lib/files/hello-server.txt';
 
 //Rsnyc tests
-vows.describe('Rsync - updating server file').addBatch({ 
-  //1st test
-  'chunk of size chunkSize = 2 in midst': {
-    topic: function() {
-        var self = this;
-        
-        rsync.chunkSize = 2;
-        
-        var clientContents = 'aabbqqcc'
-          , serverContents = 'aabbcc'
-        
-        serverUpdate(
-            clientFilePath
-          , clientContents
-          , serverFilePath
-          , serverContents
-          , function(err, outgoing) {
-            if(err) throw err;
-            self.callback(null, outgoing.data.toString())
-        });
-    }, 
-    'diffence is just that block': function(topic) {
-      assert.equal('qq', topic);
-    },
-    //2nd test
-    'two chunks of size chunkSize = 2 in midst': {
+vows.describe('Rsync - updating server file')
+  .addBatch({
+    'chunk of size chunkSize = 2 in midst': {
+      topic: function() {
+          var self = this;
+          
+          rsync.chunkSize = 2;
+          
+          var clientContents = 'aabbqqcc'
+            , serverContents = 'aabbcc'
+          
+          serverUpdate(
+              clientFilePath
+            , clientContents
+            , serverFilePath
+            , serverContents
+            , function(err, outgoing) {
+              if(err) throw err;
+              self.callback(null, outgoing.data.toString())
+          });
+      }, 
+      'diffence is just that block': function(topic) {
+        assert.equal('qq', topic);
+      },
+      'two chunks of size chunkSize = 2 in midst': {
+        topic: function() {
+            var self = this
+              , clientContents = 'aappbbqqcc'
+              , serverContents = 'aabbcc'
+              , changes = ['pp', 'qq'];
+            
+            rsync.chunkSize = 2; 
+            
+            serverUpdate(
+                clientFilePath
+              , clientContents
+              , serverFilePath
+              , serverContents
+              , function(err, outgoing) {
+                if(err) throw err;
+                self.callback(null, {outgoing: outgoing.data.toString(), changes: changes})
+            });
+        }, 
+        'diffences = the two chunks': function(topic) {
+          assert.include(topic.changes, topic.outgoing);
+          delete(topic.changes[topic.changes.indexOf(topic.outgoing)]);
+        }
+      }
+    }
+  })
+  .addBatch({
+    'chunks all over the place': {
       topic: function() {
           var self = this
-            , clientContents = 'aappbbqqcc'
+            , clientContents = 'zabauubbpqqccxz'
             , serverContents = 'aabbcc'
-            , changes = ['pp', 'qq'];
+            , changes = ['z', 'abauu', 'pqq', 'xz'];
           
           rsync.chunkSize = 2; 
           
@@ -51,13 +77,13 @@ vows.describe('Rsync - updating server file').addBatch({
               self.callback(null, {outgoing: outgoing.data.toString(), changes: changes})
           });
       }, 
-      'diffences = the two chunks': function(topic) {
+      'diffences are correct': function(topic) {
         assert.include(topic.changes, topic.outgoing);
         delete(topic.changes[topic.changes.indexOf(topic.outgoing)]);
       }
-    }
-  }
-}).run();
+    }  
+  })
+  .run();
 
 
 //HELPERS
