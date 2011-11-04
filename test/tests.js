@@ -14,8 +14,8 @@ var fileOverwrite = function(path, contents, callback) {
 
   //allowed paths
   var allowed = [
-      './lib/files/hello-server.txt'
-    , './lib/files/hello-client.txt' 
+      clientFilePath
+    , serverFilePath 
   ];
   
   if(allowed.indexOf(path) === -1) { return; }  //nuh-uh!
@@ -65,20 +65,20 @@ var RsyncWrite = function(clientPath, clientContents, serverPath, serverContents
 vows.describe('Rsync - updating server file').addBatch({
   'single chunk of size chunkSize in middle': {
     topic: function() {
-      var self = this;
-      
-      var clientContents = 'aabbqqcc'
-        , serverContents = 'aabbcc'
-      
-      RsyncWrite(
-          clientFilePath
-        , clientContents
-        , serverFilePath
-        , serverContents
-        , function(err, outgoing) {
-          if(err) throw err;
-          self.callback(null, outgoing.data.toString())
-      });
+        var self = this;
+        
+        var clientContents = 'aabbqqcc'
+          , serverContents = 'aabbcc'
+        
+        RsyncWrite(
+            clientFilePath
+          , clientContents
+          , serverFilePath
+          , serverContents
+          , function(err, outgoing) {
+            if(err) throw err;
+            self.callback(null, outgoing.data.toString())
+        });
     }, 
 
     'diffence is just that block': function(topic) {
