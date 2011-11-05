@@ -61,11 +61,11 @@ vows.describe('Rsync - updating server file')
     'chunks all over the place': {
       topic: function() {
           var self = this
-            , clientContents = 'zabauubbpqqccxz'
-            , serverContents = 'aabbcc'
-            , changes = ['z', 'abauu', 'pqq', 'xz'];
-          
-          rsync.chunkSize = 2; 
+            , clientContents = '12345678910111213141516'
+            , serverContents = '37891012131516'
+            , changes = ['12', '456', '11', '4'];
+
+          rsync.chunkSize = 3; 
           
           serverUpdate(
               clientFilePath
@@ -78,6 +78,7 @@ vows.describe('Rsync - updating server file')
           });
       }, 
       'diffences are correct': function(topic) {
+        console.log('all ova da place tests');
         assert.include(topic.changes, topic.outgoing);
         delete(topic.changes[topic.changes.indexOf(topic.outgoing)]);
       }

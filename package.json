@@ -10,7 +10,7 @@
       , "node-static": ">=0.5.9"
       , "hiredis": ">=0.1.12"
       , "redis": ">=0.6.7"
-      , "journey": ">=0.4.0-pre-s"
+      , "journey": ">=0.4.0-pre-2"
       , "vows": ">=0.5.13"
     }
   , "main": "index"
