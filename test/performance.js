@@ -1,6 +1,6 @@
 var rsync = require('../lib/node-rsync.js');
 
-var sync = rsync.createRSync('./performance', 1000);
+var sync = rsync.createRSync('./performance', 750);
 
 var t1 = Date.now();
 sync.checksum('/libruby190.a', function (err, checksums) {
