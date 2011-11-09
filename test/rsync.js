@@ -10,7 +10,9 @@ sync.checksum('/server.txt', function (err, results) {
 
         sync.sync('/server.txt', diff, function(err, results) {
             if(err) { throw err; }
-            console.log(results.toString());
+            
+            console.log('synced', results);
+            console.log('sync time:', Date.now() - t2);
         });
     });
 });
