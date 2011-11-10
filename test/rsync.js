@@ -1,6 +1,6 @@
 var rsync = require('../lib/node-rsync');
 
-var sync = rsync.createRSync('../lib/files', 2);
+var sync = rsync.createRSync('../lib/files', 4);
 
 sync.checksum('/server.txt', function (err, results) {
     var t1 = Date.now();
@@ -11,7 +11,7 @@ sync.checksum('/server.txt', function (err, results) {
         sync.sync('/server.txt', diff, function(err, results) {
             if(err) { throw err; }
             
-            console.log('synced', results);
+            console.log('synced:', results);
             console.log('sync time:', Date.now() - t2);
         });
     });
