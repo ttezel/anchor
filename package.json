@@ -14,5 +14,5 @@
         "vows": ">=0.5.13"  
     }
   , "main": "index"
-  , "engines": { "node": "0.5.x" }
+  , "engines": { "node": "0.5 || 0.6" }
 }
