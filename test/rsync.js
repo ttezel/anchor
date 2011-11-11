@@ -87,6 +87,18 @@ function remove(old) {
 
     return old.substr(0,min) + old.substr(max);
 }
+
+function randomMode(modified, size) {
+    var choices = [
+        prepend
+      , append
+      , middle
+      , remove
+    ];
+    
+    var fn = choices[rand(choices.length-1)];   
+    return fn.call(null, modified, size); 
+};
  
 //writes modified file contents to client.txt
 //changes are based on mode
@@ -99,7 +111,7 @@ function newFile(mode, callback) {
     , numChanges = rand(old.length);
 
   //add colors dev dependency
-  console.log('mode: %s (%d)'.yellow, modes[mode], mode);
+  console.log('mode: %s (%d)'.green, modes[mode], mode);
   
   if(mode > 1) {
     console.log('# of changes: %d'.cyan, numChanges); 
@@ -123,21 +135,12 @@ function newFile(mode, callback) {
         break;
     case 3:
         for(var i = 0; i < numChanges; i++) {
-           modified = remove(modified); 
+            modified = remove(modified); 
         }
         break;
     case 4:  //hybrid of the other modes
         for(var i = 0; i < numChanges; i++) {
-            var num = Math.random()*10000;
-            if(num%6) {
-                modified = prepend(modified, size); 
-            } else if(num%7) {
-                modified = append(modified, size); 
-            } else if(num%8) {
-                modified = middle(modified, size);
-            } else {
-                modified = remove(modified);
-            }
+            modified = randomMode(modified, size);
         }
         break;
     default:
