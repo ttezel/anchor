@@ -1,9 +1,8 @@
 var fs = require('fs')
   , vows = require('vows')
   , assert = require('assert')
-  , rsync = require('../lib/node-rsync');
- 
-//test helpers - create TEST API
+  , rsync = require('../lib/node-rsync')
+  , colors = require('colors');
  
 var allow = [
     '../lib/files/client.txt'
@@ -11,57 +10,146 @@ var allow = [
 ];
  
 //upper bounds on file sizes
-var levels = [
-  10, 20, 30, 50, 70, 100, 150, 200, 500, 750, 1000, 5000, 1000000, 5000000
+(function() {
+    levels = [];
+
+    for(var i = 0; i < 24; i++) {
+      levels.push(1 << i);
+    }
+
+    return levels;
+}).call(this);
+
+//modify modes
+modes = [
+    'prepend'
+  , 'append'
+  , 'middle'
+  , 'delete'
+  , 'wild'
 ];
+
+//inclusive max
+function rand(max) {
+  return Math.floor(Math.random()*(max+1));
+}
+
+//range, inclusive on both ends
+function randRange(min, max) {
+  return Math.floor(min + Math.random()*(max+1 - min));
+}
  
 function randString(length) {
-  var chars = '0123456789QWERTYUIOPASDFGHJKLZXCVBNM'
-    , str = '';
-   
+  var str = ''
+  , min = 40
+  , max = 126;
+  
   for(var i = 0; i < length; i++) {
-    var index = Math.floor(Math.random()*chars.length)
-    str += chars[index];
+    var index = randRange(min, max);
+    str += String.fromCharCode(index);
   }
   return str;
 };
  
 //writes to server.txt
 function oldFile(level, callback) {
-  var path = allow[1];  //server.txt
-   
-  var from = level === 0 ? 1 : levels[level - 1]
-    , to = levels[level];
+  var path = allow[1]
+    , min = level === 0 ? 1 : levels[level - 1]
+    , max = levels[level];
        
-  var size = Math.floor(from + Math.random()*(to - from + 1))
+  var size = randRange(min, max)
     , contents = randString(size);
  
   fs.writeFileSync(path, contents);
   return callback(null);
 };
+
+//file modification helpers
+
+function prepend(old, size) {
+  return randString(size) + old;
+};
+
+function append(old, size) {
+  return old + randString(size);
+};
+
+function middle(old, size) {
+  var mods = randString(size)
+    , k = randRange(1, old.length-2);
+
+  return old.substr(0,k) + mods + old.substr(k+1);
+};
+
+function remove(old) {
+  var min = randRange(0, old.length)
+    , max = randRange(min, old.length);
+
+    return old.substr(0,min) + old.substr(max);
+}
  
 //writes modified file contents to client.txt
-function newFile(mode, level, callback) {
+//changes are based on mode
+function newFile(mode, callback) {
   var oldpath = allow[1]  //server.txt
     , newpath = allow[0] //client.txt
-    , modified = fs.readFileSync(oldpath, 'utf-8');
+    , old = fs.readFileSync(oldpath, 'utf-8');
  
-  switch(mode) {
-    case 0: //prepend
-      modified = 'tolga Prepend test ' + modified;
-      break;
-    case 1: //append
-      break;
-    case 2: //modify middle contents
-      break;
-    case 3: //delete stuff
-      break;
-    case 4: //just go wild (mix of other modes)
-      break;
+  var size = rand(old.length)
+    , numChanges = rand(old.length);
+
+  //add colors dev dependency
+  console.log('mode: %s (%d)'.yellow, modes[mode], mode);
+  
+  if(mode > 1) {
+    console.log('# of changes: %d'.cyan, numChanges); 
   }
- 
-  fs.writeFileSync(newpath, modified); 
-  return callback(null);
+
+  console.log('filesize: %d Bytes'.bold, fs.readFileSync(oldpath).length);
+
+  var modified = old;
+
+  switch(mode) {
+    case 0:
+        modified = prepend(modified, size);
+        break;
+    case 1:
+        modified = append(modified, size);
+        break;
+    case 2:
+        for(var i = 0; i < numChanges; i++) {
+            modified = middle(modified, size);
+        }
+        break;
+    case 3:
+        for(var i = 0; i < numChanges; i++) {
+           modified = remove(modified); 
+        }
+        break;
+    case 4:  //hybrid of the other modes
+        for(var i = 0; i < numChanges; i++) {
+            var num = Math.random()*10000;
+            if(num%6) {
+                modified = prepend(modified, size); 
+            } else if(num%7) {
+                modified = append(modified, size); 
+            } else if(num%8) {
+                modified = middle(modified, size);
+            } else {
+                modified = remove(modified);
+            }
+        }
+        break;
+    default:
+        callback(new Error('mode not supported '+mode.toString()));
+  }
+
+  fs.writeFileSync(newpath, modified);
+
+  fs.stat(newpath, function(err, stats) {
+      if(err) { return callback(err); }
+      return callback(null);
+  });
 }
  
 function runRsync(blocksize, callback) {
@@ -79,8 +167,13 @@ function runRsync(blocksize, callback) {
                 if(err) { callback(err); }
 
                 var t3 = Date.now();
-                     
-                console.log('tot. time: %d, sync time: %d', t3-t1, t3-t2);
+                
+                console.log('tot. time:', t3-t1, 
+                            'sync time:', t3-t2, 
+                            'diff time:', t2-t1);
+                console.log('-----------------------'
+                          + '-----------------------');
+
                 return callback(null, synced);
             });
         });
@@ -88,61 +181,41 @@ function runRsync(blocksize, callback) {
 };
  
  
-//Rsync test batches
-var tests = vows.describe('Rsync tests');
+//test batches
+(function() {
+  var tests = vows.describe('Rsync tests');
  
-for(var i = 0; i < 1; i++) {
- 
-  (function() {
-    var level = i;
-   
-    tests.addBatch({
-      'file test': {
-        topic: function() {
-          var self = this;
-         
-          oldFile(level, function(err) {
-            if (err) { throw err; }
+  for(var i = 0; i < levels.length; i++) {  //file size (level)
+      for(var j = 0; j < modes.length; j++) {  //mode
+          (function() {
+            var level = i
+              , mode = j;
            
-            //0 is mode (loop thru the modes)
-            newFile(0, level, function(err) {
-              if (err) { throw err; }
+            tests.addBatch({
+                'file test': {
+                    topic: function() {
+                        var self = this;
+                       
+                        oldFile(level, function(err) {
+                            if (err) { throw err; }
+                           
+                            newFile(mode, function(err) {
+                                if (err) { throw err; }
 
-              //4 is block size used in Rsync (loop thru different block sizes)
-              runRsync(4, self.callback);
+                                //TODO: use different blocksizes
+                                runRsync(750, self.callback);
+                            });
+                        });
+                    },
+                    'sync matches file contents': function(err, result) {
+                        var client = fs.readFileSync(allow[0], 'utf-8');
+                        assert.equal(client, result.toString());
+                    }
+                }
             });
-          });
-        },
-        'sync matches file contents': function(err, result) {
-          console.log('result', result);
-         
-          //var ref = fs.readFileSync(allow[0]); //client contents
-         
-          //console.log('ref', ref);
-          //console.log('result', result);
-         
-          //assert.equal(ref, result);
-        }
+          }).call(this); 
       }
-    });
-  }).call(this);
-}
- 
-tests.run();
- 
-/*
-var level = 0;
- 
-oldFile(level, function(err) {
-    if (err) { throw err; }
-    console.log('done server.txt stuff');
-   
-    newFile(0, level, function(err) {
-      if (err) { throw err; }
-      console.log('done client.txt stuff');
-      runRsync(4, function(err, synced) {
-        console.log('done rsync stuff');
-      });
-    });
-});
-*/
+  }
+  tests.export(module);
+  return tests;
+}).call(this);
