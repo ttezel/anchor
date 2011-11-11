@@ -11,7 +11,8 @@
       , "node-static": ">=0.5.9"
     }
   , "devDependencies": {
-        "vows": ">=0.5.13"  
+        "vows": ">=0.5.13"
+      , "colors": ">=0.5.1"
     }
   , "main": "index"
   , "engines": { "node": "0.5.x" }
