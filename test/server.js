@@ -1,32 +1,24 @@
 var server = require('../lib/server.js').createServer().listen(8000);
-var client = require('../lib/client.js').createClient(8000);
+var client1 = require('../lib/client.js').createClient(8000);
+var client2 = require('../lib/client.js').createClient(8000);
 
-server.checksum(function (path, client) {
-    if (path === '/client.txt') {
-        setTimeout(function () {
-            client.write('checksum for ' + path);
-        }, 5000);
-    } else {
-        client.write('checksum for ' + path);
-    }
-    // console.log('SERVER: checksum');
+server.checksum(function (client, data) {
+    var path = data[1].toString();
 });
 
-server.diff(function () {
-    console.log('SERVER: diff');
+server.sync(function (buffers) {
+    console.log('SERVER: sync request');
 });
 
-server.sync(function () {
-    console.log('SERVER: sync');
-});
+server.error(function (buffers) {
+    console.log('SERVER: error');
+})
 
-client.on('ready', function () {
-    client.checksum('/client.txt', function (result) {
+client1.on('ready', function () {
+    client1.checksum('/client.txt', function (result) {
         console.log('CLIENT: received checksum: %s', result);
     });
-    setTimeout(function () {
-        client.checksum('/client2.txt', function (result) {
-            console.log('CLIENT2: received checksum: %s', result);
-        }); 
-    }, 2000); 
 });
+
+client1.close();
+client2.close();
