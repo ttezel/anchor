@@ -1,13 +1,15 @@
 var Client = require('../lib/client')
-  , Server = require('../lib/server');
+  , Anchor = require('../lib/anchor');
 
-var server = new Server().listen(8080);
+var anchor = new Anchor({
+    roots: ['../files']
+});
 
 var client = new Client({
     host: '127.0.0.1'
   , port: 8080
   , path: '/sync/'
-  , method: 'GET' 
+  , method: 'POST' 
 });
 
-client.post('/sync/foo/bar');
+client.sync('/sync/foo/bar');
