@@ -12,4 +12,4 @@ var client = new Client({
   , method: 'POST' 
 });
 
-client.sync('/sync/foo/bar');
+client.sync('/sync/../files/server.txt');
