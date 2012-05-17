@@ -9,6 +9,7 @@
         "formidable": ">=1.0.6"
       , "restify": ">=0.5.4"
       , "node-static": ">=0.5.9"
+      , "findit": ">=0.1.2"
     }
   , "devDependencies": {
         "vows": ">=0.5.13"
